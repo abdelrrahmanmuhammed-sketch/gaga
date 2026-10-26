@@ -1,1067 +1,175 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مُنظّم المذاكرة الذكي</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --header: #ffffff;
-      --input-bg: #ffffff;
-      --shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    body.dark {
-      --primary: #7dd3fc;
-      --primary-hover: #38bdf8;
-      --success: #4ade80;
-      --warning: #fbbf24;
-      --danger: #f87171;
-      --bg: #0b1220;
-      --card: #151e2e;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --border: #2d3b55;
-      --header: #151e2e;
-      --input-bg: #0b1220;
-      --shadow: 0 8px 30px rgba(0,0,0,0.4);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.4s, color 0.4s;
-    }
-    .title-animated {
-      background: linear-gradient(90deg, var(--primary), #60a5fa, var(--primary));
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: shimmer 4s linear infinite;
-      font-weight: 700;
-    }
-    @keyframes shimmer {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
-    }
-    #auth {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-      padding: 20px;
-    }
-    body.dark #auth { background: linear-gradient(135deg, #0b1220, #1e3a8a); }
-    .auth-box {
-      background: var(--card);
-      width: 100%;
-      max-width: 420px;
-      padding: 40px 32px;
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      color: var(--text);
-    }
-    .auth-box h1 { text-align: center; font-size: 26px; margin-bottom: 6px; }
-    .auth-box .subtitle { text-align: center; color: var(--muted); margin-bottom: 28px; }
-    .auth-tabs {
-      display: flex; background: var(--bg); border-radius: 14px; padding: 4px; margin-bottom: 20px;
-    }
-    .auth-tabs button {
-      flex: 1; padding: 10px; border: none; background: transparent; border-radius: 12px;
-      font-weight: 600; cursor: pointer; color: var(--muted);
-    }
-    .auth-tabs button.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    input, select, textarea {
-      width: 100%; padding: 14px 16px; margin-bottom: 14px; border: 1.5px solid var(--border);
-      border-radius: 12px; font-size: 16px; outline: none; background: var(--input-bg); color: var(--text);
-    }
-    textarea { min-height: 80px; resize: vertical; }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-    .btn {
-      width: 100%; padding: 14px; background: var(--primary); color: #0f172a; border: none;
-      border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
-    }
-    body:not(.dark) .btn { color: white; }
-    .btn:hover { background: var(--primary-hover); }
-    .btn-sm { width: auto; padding: 8px 16px; font-size: 14px; }
-    .btn-gray { background: #64748b; color: white !important; }
-    .btn-danger { background: var(--danger); color: white !important; }
-    .msg { text-align: center; margin-bottom: 14px; font-size: 14px; min-height: 20px; }
-    .msg.error { color: var(--danger); }
-    .msg.success { color: var(--success); }
-    #app { display: none; }
-    header {
-      background: var(--header); border-bottom: 1px solid var(--border);
-      padding: 14px 24px; display: flex; justify-content: space-between; align-items: center;
-      position: sticky; top: 0; z-index: 100;
-    }
-    header h1 { font-size: 20px; }
-    .user-box { display: flex; align-items: center; gap: 12px; }
-    .avatar {
-      width: 44px; height: 44px; background: var(--primary); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 18px; overflow: hidden; cursor: pointer;
-      border: 2px solid var(--primary);
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
-    .tabs {
-      display: flex; gap: 8px; background: var(--card); padding: 6px; border-radius: 16px;
-      margin-bottom: 24px; border: 1px solid var(--border); flex-wrap: wrap;
-    }
-    .tabs button {
-      padding: 10px 20px; border: none; background: transparent; border-radius: 12px;
-      font-weight: 600; cursor: pointer; color: var(--muted);
-    }
-    .tabs button.active { background: var(--primary); color: #0f172a; }
-    body:not(.dark) .tabs button.active { color: white; }
-    .section { display: none; }
-    .section.active { display: block; }
-    .card {
-      background: var(--card); border-radius: 16px; padding: 24px; margin-bottom: 20px;
-      border: 1px solid var(--border); box-shadow: var(--shadow);
-    }
-    .card h2 { margin-bottom: 16px; font-size: 18px; }
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px; margin-bottom: 20px;
-    }
-    .stat { text-align: center; padding: 20px; }
-    .stat-number { font-size: 36px; font-weight: 700; color: var(--primary); margin: 6px 0; }
-    .stat-label { color: var(--muted); font-size: 14px; }
-    .progress { height: 10px; background: var(--border); border-radius: 20px; overflow: hidden; margin-top: 8px; }
-    .progress-bar { height: 100%; background: var(--success); border-radius: 20px; transition: width 0.4s; }
-    .item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 0; border-bottom: 1px solid var(--border);
-    }
-    .item:last-child { border-bottom: none; }
-    .perc { font-weight: 700; }
-    .perc.high { color: var(--success); }
-    .perc.mid { color: var(--warning); }
-    .perc.low { color: var(--danger); }
-    .row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-    .row input, .row select { flex: 1; min-width: 140px; margin-bottom: 0; }
-    .setting-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 0; border-bottom: 1px solid var(--border);
-    }
-    .setting-row:last-child { border-bottom: none; }
-    .toggle {
-      width: 52px; height: 28px; background: #cbd5e1; border-radius: 20px; position: relative;
-      cursor: pointer; transition: background 0.3s;
-    }
-    body.dark .toggle { background: #475569; }
-    .toggle.on { background: var(--primary); }
-    .toggle::after {
-      content: ""; position: absolute; top: 3px; width: 22px; height: 22px;
-      background: white; border-radius: 50%; transition: transform 0.3s;
-    }
-    body[dir="ltr"] .toggle::after { left: 3px; }
-    body[dir="rtl"] .toggle::after { right: 3px; }
-    body[dir="ltr"] .toggle.on::after { transform: translateX(24px); }
-    body[dir="rtl"] .toggle.on::after { transform: translateX(-24px); }
-    .avatar-upload { text-align: center; margin: 16px 0; }
-    .avatar-preview {
-      width: 90px; height: 90px; border-radius: 50%; background: var(--border);
-      margin: 0 auto 12px; overflow: hidden; display: flex; align-items: center;
-      justify-content: center; font-size: 32px; border: 3px solid var(--primary);
-    }
-    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .chart-container { position: relative; height: 280px; margin-top: 10px; }
-    .pomodoro { text-align: center; padding: 30px 20px; }
-    .pomodoro-time {
-      font-size: 72px; font-weight: 700; color: var(--primary); margin: 10px 0;
-      font-variant-numeric: tabular-nums;
-    }
-    .pomodoro-mode { font-size: 18px; color: var(--muted); margin-bottom: 20px; }
-    .color-dot {
-      width: 20px; height: 20px; border-radius: 50%; display: inline-block;
-      margin-left: 8px; border: 2px solid var(--border); cursor: pointer;
-    }
-    .notes { font-size: 14px; color: var(--muted); margin-top: 4px; white-space: pre-wrap; }
-    .chat-fab {
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      width: 60px;
-      height: 60px;
-      background: var(--primary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 28px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-      cursor: pointer;
-      z-index: 200;
-      border: none;
-      transition: transform 0.2s;
-    }
-    .chat-fab:hover { transform: scale(1.08); }
-    body[dir="ltr"] .chat-fab { left: auto; right: 24px; }
-    .chat-panel {
-      position: fixed;
-      bottom: 100px;
-      left: 24px;
-      width: 320px;
-      max-height: 420px;
-      background: var(--card);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      display: none;
-      flex-direction: column;
-      z-index: 199;
-      overflow: hidden;
-    }
-    body[dir="ltr"] .chat-panel { left: auto; right: 24px; }
-    .chat-panel.open { display: flex; }
-    .chat-header {
-      padding: 14px 16px;
-      background: var(--primary);
-      color: white;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .chat-messages {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-      font-size: 14px;
-    }
-    .chat-input {
-      display: flex;
-      border-top: 1px solid var(--border);
-    }
-    .chat-input input { margin: 0; border: none; border-radius: 0; flex: 1; }
-    .chat-input button { width: auto; border-radius: 0; }
-    .chat-bubble { padding: 9px 11px; border-radius: 12px; margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
-    .chat-bubble.user { background: var(--bg); border: 1px solid var(--border); }
-    .chat-bubble.assistant { background: color-mix(in srgb, var(--primary) 13%, var(--card)); color: var(--text); }
-    .chat-bubble.error { color: var(--danger); border: 1px solid var(--danger); }
-    .chat-status { color: var(--muted); font-size: 12px; padding: 4px 8px; }
-    .chat-input button:disabled { opacity: .65; cursor: wait; }
-    @media (max-width: 768px) {
-      .container { padding: 16px 12px; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .pomodoro-time { font-size: 56px; }
-      .chart-container { height: 220px; }
-      .tabs button { padding: 8px 14px; font-size: 14px; }
-    }
-    @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .chat-panel { width: calc(100% - 32px); left: 16px; right: 16px; }
-      body[dir="ltr"] .chat-panel { left: 16px; right: 16px; }
-      header { padding: 12px 16px; }
-      .user-box { gap: 8px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNile Academy</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="auth">
-  <div class="auth-box">
-    <h1 class="title-animated" id="t-title">مُنظّم المذاكرة الذكي</h1>
-    <p class="subtitle" id="t-subtitle">تابع دراستك ونسبة نجاحك بسهولة</p>
-    <div class="auth-tabs">
-      <button id="btn-login" class="active" onclick="showAuth('login')" data-i18n="login">تسجيل الدخول</button>
-      <button id="btn-register" onclick="showAuth('register')" data-i18n="register">إنشاء حساب</button>
+<header class="navbar">
+    <div class="container nav-container">
+        <a href="#home" class="logo">Code<span>Nile</span></a>
+        <nav>
+            <ul class="menu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#courses">Courses</a></li>
+                <li><a href="#trainers">Trainers</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#newsletter" class="nav-btn">Join Us</a></li>
+            </ul>
+        </nav>
     </div>
-    <div id="msg" class="msg"></div>
-    <div id="form-login">
-      <input type="text" id="login-username" data-i18n-placeholder="username">
-      <input type="password" id="login-password" data-i18n-placeholder="password">
-      <button class="btn" onclick="login()" data-i18n="enter">دخول</button>
-    </div>
-    <div id="form-register" style="display:none;">
-      <input type="text" id="reg-name" data-i18n-placeholder="fullName">
-      <input type="text" id="reg-username" data-i18n-placeholder="username">
-      <input type="password" id="reg-password" data-i18n-placeholder="password">
-      <button class="btn" onclick="register()" data-i18n="createAccount">إنشاء الحساب</button>
-    </div>
-  </div>
-</div>
+</header>
 
-<div id="app">
-  <header>
-    <h1 class="title-animated" id="app-title">مُنظّم المذاكرة الذكي</h1>
-    <div class="user-box">
-      <div>
-        <div id="display-name" style="font-weight:600;"></div>
-        <div id="display-grade" style="font-size:13px;color:var(--muted);"></div>
-      </div>
-      <div class="avatar" id="avatar" onclick="document.getElementById('avatar-input').click()">
-        <span id="avatar-letter">م</span>
-        <img id="avatar-img" style="display:none;">
-      </div>
-      <button class="btn btn-sm btn-gray" onclick="logout()" data-i18n="logout">خروج</button>
-    </div>
-  </header>
-
-  <div class="container">
-    <div class="tabs">
-      <button class="active" onclick="showSection('dashboard', this)" data-i18n="dashboard">لوحة التحكم</button>
-      <button onclick="showSection('pomodoro', this)" data-i18n="pomodoro">البومودورو</button>
-      <button onclick="showSection('grade', this)" data-i18n="grade">السنة</button>
-      <button onclick="showSection('subjects', this)" data-i18n="subjects">المواد</button>
-      <button onclick="showSection('exams', this)" data-i18n="exams">الامتحانات</button>
-      <button onclick="showSection('settings', this)" data-i18n="settings">الإعدادات</button>
-    </div>
-
-    <div id="dashboard" class="section active">
-      <div class="stats-grid">
-        <div class="card stat">
-          <div class="stat-label" data-i18n="overall">نسبة النجاح الكلية</div>
-          <div class="stat-number" id="overall">0%</div>
-          <div class="progress"><div class="progress-bar" id="overall-bar" style="width:0%"></div></div>
-        </div>
-        <div class="card stat">
-          <div class="stat-label" data-i18n="streak">سلسلة الأيام</div>
-          <div class="stat-number" id="streak">0</div>
-        </div>
-        <div class="card stat">
-          <div class="stat-label" data-i18n="todayPomodoros">جلسات اليوم</div>
-          <div class="stat-number" id="today-pomos">0</div>
-        </div>
-        <div class="card stat">
-          <div class="stat-label" data-i18n="dailyGoal">هدف اليوم</div>
-          <div class="stat-number" id="goal-progress">0/4</div>
-          <div class="progress"><div class="progress-bar" id="goal-bar" style="width:0%"></div></div>
-        </div>
-      </div>
-      <div class="card">
-        <h2 data-i18n="chartTitle">رسم بياني لنسبة النجاح</h2>
-        <div class="chart-container">
-          <canvas id="subjectsChart"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <h2 data-i18n="perSubject">نسبة النجاح لكل مادة</h2>
-        <div id="subjects-progress"></div>
-      </div>
-    </div>
-
-    <div id="pomodoro" class="section">
-      <div class="card pomodoro">
-        <div class="pomodoro-mode" id="pomo-mode">وضع التركيز</div>
-        <div class="pomodoro-time" id="pomo-time">25:00</div>
-        <div class="row" style="justify-content:center;">
-          <button class="btn btn-sm" id="pomo-start" onclick="startPomodoro()">ابدأ</button>
-          <button class="btn btn-sm btn-gray" onclick="pausePomodoro()">إيقاف</button>
-          <button class="btn btn-sm btn-danger" onclick="resetPomodoro()">إعادة</button>
-        </div>
-        <div style="margin-top:16px;color:var(--muted);">
-          <span data-i18n="sessionsToday">جلسات اليوم:</span> <strong id="pomo-count">0</strong>
-        </div>
-      </div>
-    </div>
-
-    <div id="grade" class="section">
-      <div class="card">
-        <h2 data-i18n="selectGrade">حدد السنة الدراسية</h2>
-        <select id="grade-select"></select>
-        <button class="btn" onclick="saveGrade()" data-i18n="save">حفظ</button>
-      </div>
-    </div>
-
-    <div id="subjects" class="section">
-      <div class="card">
-        <h2 data-i18n="addSubject">إضافة مادة</h2>
-        <div class="row">
-          <input type="text" id="new-subject" data-i18n-placeholder="subjectName">
-          <input type="color" id="subject-color" value="#3b82f6" style="width:60px;height:48px;padding:4px;">
-          <button class="btn btn-sm" onclick="addSubject()" data-i18n="add">إضافة</button>
-        </div>
-        <div id="subjects-list"></div>
-      </div>
-    </div>
-
-    <div id="exams" class="section">
-      <div class="card">
-        <h2 data-i18n="addExam">إضافة امتحان</h2>
-        <div class="row">
-          <select id="exam-subject"></select>
-          <input type="text" id="exam-name" data-i18n-placeholder="examName">
-          <input type="number" id="exam-score" data-i18n-placeholder="score">
-          <input type="number" id="exam-total" data-i18n-placeholder="total">
-          <button class="btn btn-sm" onclick="addExam()" data-i18n="add">إضافة</button>
-        </div>
-        <div id="exams-list"></div>
-      </div>
-    </div>
-
-    <div id="settings" class="section">
-      <div class="card">
-        <h2 data-i18n="settings">الإعدادات</h2>
-        <div class="setting-row" style="flex-direction:column; align-items:stretch;">
-          <strong data-i18n="changeName">تغيير الاسم</strong>
-          <div class="row" style="margin-top:10px;">
-            <input type="text" id="new-name" data-i18n-placeholder="fullName">
-            <button class="btn btn-sm" onclick="changeName()" data-i18n="save">حفظ</button>
-          </div>
-        </div>
-        <div class="setting-row" style="flex-direction:column; align-items:stretch;">
-          <strong data-i18n="dailyGoalSetting">هدف الجلسات اليومية</strong>
-          <div class="row" style="margin-top:10px;">
-            <input type="number" id="goal-input" min="1" max="12" value="4" style="max-width:120px;">
-            <button class="btn btn-sm" onclick="saveGoal()" data-i18n="save">حفظ</button>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div>
-            <strong data-i18n="darkMode">الوضع الليلي</strong>
-            <div style="font-size:13px;color:var(--muted)" data-i18n="darkModeDesc">مظهر هادي ومريح للعين</div>
-          </div>
-          <div class="toggle" id="dark-toggle" onclick="toggleDark()"></div>
-        </div>
-        <div class="setting-row">
-          <div>
-            <strong data-i18n="language">اللغة</strong>
-            <div style="font-size:13px;color:var(--muted)" data-i18n="languageDesc">تغيير لغة الواجهة</div>
-          </div>
-          <select id="lang-select" onchange="changeLanguage(this.value)" style="width:160px;margin:0;">
-            <option value="ar">العربية</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-        <div class="setting-row" style="flex-direction:column; align-items:stretch;">
-          <div style="margin-bottom:10px;">
-            <strong data-i18n="profilePic">صورة البروفايل</strong>
-            <div style="font-size:13px;color:var(--muted)" data-i18n="profilePicDesc">اضغط على الصورة لتغييرها</div>
-          </div>
-          <div class="avatar-upload">
-            <div class="avatar-preview" id="settings-avatar" onclick="document.getElementById('avatar-input').click()">
-              <span id="settings-letter">م</span>
-              <img id="settings-img" style="display:none;">
+<main>
+    <section class="hero" id="home">
+        <div class="container hero-container">
+            <div class="hero-text">
+                <span class="badge">New batch starts in November</span>
+                <h1>Learn to build real websites</h1>
+                <p>Start your programming journey with practical courses, expert trainers, and real projects.</p>
+                <div class="hero-buttons">
+                    <a href="#courses" class="btn btn-accent">Start Learning</a>
+                    <a href="#projects" class="btn btn-outline">See Student Work</a>
+                </div>
             </div>
-            <input type="file" id="avatar-input" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
-            <button class="btn btn-sm btn-gray" onclick="removeAvatar()" data-i18n="removePic">إزالة الصورة</button>
-          </div>
+            <div class="hero-image">
+                <img src="images/hero.png" alt="Students learning web development">
+            </div>
         </div>
-      </div>
+    </section>
+
+    <section class="stats container">
+        <div class="stat"><h2>1,200+</h2><p>Students</p></div>
+        <div class="stat"><h2>6</h2><p>Courses</p></div>
+        <div class="stat"><h2>15</h2><p>Expert Trainers</p></div>
+        <div class="stat"><h2>96%</h2><p>Pass the final project</p></div>
+    </section>
+
+    <section class="section container" id="courses">
+        <div class="section-heading">
+            <h2>Popular Courses</h2>
+            <p>Choose a course and build the skills you need to create modern websites.</p>
+        </div>
+        <div class="courses-grid">
+            <article class="course-card featured">
+                <img src="images/course-html.png" alt="HTML5 course">
+                <div class="card-body">
+                    <span class="level">Beginner</span>
+                    <h3>HTML5</h3>
+                    <p>Learn to structure web pages with HTML5.</p>
+                    <div class="card-footer"><span>12 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+            <article class="course-card">
+                <img src="images/course-css.png" alt="CSS3 course">
+                <div class="card-body">
+                    <span class="level">Beginner</span>
+                    <h3>CSS3</h3>
+                    <p>Style pages with colors, layouts, and responsive design.</p>
+                    <div class="card-footer"><span>14 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+            <article class="course-card">
+                <img src="images/course-js.png" alt="JavaScript course">
+                <div class="card-body">
+                    <span class="level">Intermediate</span>
+                    <h3>JavaScript</h3>
+                    <p>Add interaction and behavior to websites.</p>
+                    <div class="card-footer"><span>18 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+            <article class="course-card">
+                <img src="images/course-php.png" alt="PHP course">
+                <div class="card-body">
+                    <span class="level">Intermediate</span>
+                    <h3>PHP</h3>
+                    <p>Build dynamic pages and server-side features.</p>
+                    <div class="card-footer"><span>16 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+            <article class="course-card">
+                <img src="images/course-mysql.png" alt="MySQL course">
+                <div class="card-body">
+                    <span class="level">Intermediate</span>
+                    <h3>MySQL</h3>
+                    <p>Store, organize, and retrieve website data.</p>
+                    <div class="card-footer"><span>10 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+            <article class="course-card">
+                <img src="images/course-react.png" alt="React course">
+                <div class="card-body">
+                    <span class="level">Advanced</span>
+                    <h3>React</h3>
+                    <p>Create interactive user interfaces with React.</p>
+                    <div class="card-footer"><span>20 Lessons</span><a href="#newsletter" class="enroll">Enroll</a></div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="section steps-section">
+        <div class="container">
+            <div class="section-heading"><h2>How It Works</h2></div>
+            <div class="steps">
+                <div class="step"><span class="step-number">1</span><div><h3>Choose your course</h3><p>Select the course that matches your goals.</p></div></div>
+                <div class="step"><span class="step-number">2</span><div><h3>Practice every lesson</h3><p>Improve your skills with hands-on practice.</p></div></div>
+                <div class="step"><span class="step-number">3</span><div><h3>Finish a capstone project</h3><p>Show what you have learned in a real project.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section container">
+        <div class="section-heading"><h2>Why CodeNile?</h2></div>
+        <div class="features-grid">
+            <article class="feature live"><h3>Live Classes</h3><p>Learn directly with trainers in interactive classes.</p></article>
+            <article class="feature labs"><h3>Practice Labs</h3><p>Practice your skills with hands-on activities and coding exercises.</p></article>
+            <article class="feature cert"><h3>Certificates</h3><p>Earn a certificate after completing your course.</p></article>
+            <article class="feature path"><h3>Capstone Projects</h3><p>Build a project that demonstrates your new skills.</p></article>
+        </div>
+    </section>
+
+    <section class="section trainers-section" id="trainers">
+        <div class="container">
+            <div class="section-heading"><h2>Meet Our Trainers</h2></div>
+            <div class="trainers-grid">
+                <article class="trainer-card"><img src="images/teacher-1.png" alt="Trainer Ahmed"><h3>Ahmed Ali</h3><p class="trainer-role">Web Development Trainer</p><p>Helps students build strong web development skills.</p></article>
+                <article class="trainer-card"><img src="images/teacher-2.png" alt="Trainer Sara"><h3>Sara Mohamed</h3><p class="trainer-role">Frontend Trainer</p><p>Teaches modern layouts and user interfaces.</p></article>
+                <article class="trainer-card"><img src="images/teacher-3.png" alt="Trainer Omar"><h3>Omar Hassan</h3><p class="trainer-role">Programming Trainer</p><p>Guides students through coding practice and projects.</p></article>
+            </div>
+        </div>
+    </section>
+
+    <section class="section container" id="projects">
+        <div class="section-heading"><h2>Student Projects</h2></div>
+        <div class="gallery">
+            <div class="project project-one"><img src="images/project-1.png" alt="Student project one"></div>
+            <div class="project"><img src="images/project-2.png" alt="Student project two"></div>
+            <div class="project"><img src="images/project-3.png" alt="Student project three"></div>
+            <div class="project project-four"><img src="images/project-4.png" alt="Student project four"></div>
+            <div class="project"><img src="images/project-5.png" alt="Student project five"></div>
+            <div class="project project-six"><img src="images/project-6.png" alt="Student project six"></div>
+        </div>
+    </section>
+
+    <section class="newsletter" id="newsletter">
+        <div class="container newsletter-container">
+            <div><h2>Join the CodeNile Newsletter</h2><p>Get updates about courses, new batches, and student projects.</p></div>
+            <form action="#" method="post"><input type="email" placeholder="Enter your email" aria-label="Email address" required><button type="submit">Subscribe</button></form>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer-container">
+        <div class="footer-about"><a href="#home" class="logo">Code<span>Nile</span></a><p>Learn programming and build your future with CodeNile Academy.</p></div>
+        <nav class="footer-links"><a href="#home">Home</a><a href="#courses">Courses</a><a href="#trainers">Trainers</a><a href="#projects">Projects</a></nav>
+        <p class="copyright">© 2026 CodeNile Academy. All rights reserved.</p>
     </div>
-  </div>
-</div>
+</footer>
 
-<!-- Chat FAB -->
-<button class="chat-fab" onclick="toggleChat()">💬</button>
-<div class="chat-panel" id="chat-panel">
-  <div class="chat-header">
-    <span data-i18n="chat">مساعد الدراسة</span>
-    <button onclick="toggleChat()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">×</button>
-  </div>
-  <div class="chat-messages" id="chat-messages">
-    <div style="color:var(--muted);">اسأل عن نصائح للمذاكرة أو أي سؤال بسيط!</div>
-  </div>
-  <div class="chat-input">
-    <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendChat()">
-    <button class="btn" onclick="sendChat()">إرسال</button>
-  </div>
-</div>
-
-<script>
-const grades = {
-  ar: ["الصف الأول الإعدادي","الصف الثاني الإعدادي","الصف الثالث الإعدادي","الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي","جامعي"],
-  en: ["Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12","University"]
-};
-
-const i18n = {
-  ar: {
-    title: "مُنظّم المذاكرة الذكي", subtitle: "تابع دراستك ونسبة نجاحك بسهولة",
-    login: "تسجيل الدخول", register: "إنشاء حساب", username: "اسم المستخدم", password: "كلمة المرور",
-    enter: "دخول", fullName: "اسمك الكامل", createAccount: "إنشاء الحساب", logout: "خروج",
-    dashboard: "لوحة التحكم", pomodoro: "البومودورو", grade: "السنة", subjects: "المواد", exams: "الامتحانات", settings: "الإعدادات",
-    overall: "نسبة النجاح الكلية", streak: "سلسلة الأيام", todayPomodoros: "جلسات اليوم", dailyGoal: "هدف اليوم",
-    chartTitle: "رسم بياني لنسبة النجاح", perSubject: "نسبة النجاح لكل مادة",
-    selectGrade: "حدد السنة الدراسية", choose: "اختر السنة", save: "حفظ",
-    addSubject: "إضافة مادة", subjectName: "اسم المادة", add: "إضافة",
-    addExam: "إضافة امتحان", examName: "اسم الامتحان", score: "الدرجة", total: "من",
-    darkMode: "الوضع الليلي", darkModeDesc: "مظهر هادي ومريح للعين",
-    language: "اللغة", languageDesc: "تغيير لغة الواجهة",
-    changeName: "تغيير الاسم", dailyGoalSetting: "هدف الجلسات اليومية",
-    profilePic: "صورة البروفايل", profilePicDesc: "اضغط على الصورة لتغييرها", removePic: "إزالة الصورة",
-    sessionsToday: "جلسات اليوم:", focusMode: "وضع التركيز", breakMode: "استراحة",
-    noSubjects: "لم تضف مواد بعد", noExams: "لا توجد امتحانات",
-    fillAll: "من فضلك املأ كل الحقول", userExists: "اسم المستخدم موجود بالفعل",
-    accountCreated: "تم إنشاء الحساب بنجاح!", wrongCreds: "اسم المستخدم أو كلمة المرور غير صحيحة",
-    gradeSaved: "تم حفظ السنة الدراسية", subjectExists: "المادة موجودة بالفعل",
-    deleteConfirm: "هل تريد الحذف؟", invalidData: "من فضلك أدخل البيانات بشكل صحيح",
-    gradeNotSet: "لم يتم تحديد السنة بعد", nameUpdated: "تم تحديث الاسم بنجاح",
-    notes: "ملاحظات", chat: "مساعد الدراسة"
-  },
-  en: {
-    title: "Smart Study Organizer", subtitle: "Track your study and success rate easily",
-    login: "Login", register: "Create Account", username: "Username", password: "Password",
-    enter: "Login", fullName: "Full Name", createAccount: "Create Account", logout: "Logout",
-    dashboard: "Dashboard", pomodoro: "Pomodoro", grade: "Grade", subjects: "Subjects", exams: "Exams", settings: "Settings",
-    overall: "Overall Success Rate", streak: "Day Streak", todayPomodoros: "Today's Sessions", dailyGoal: "Daily Goal",
-    chartTitle: "Success Rate Chart", perSubject: "Success Rate per Subject",
-    selectGrade: "Select Grade", choose: "Choose Grade", save: "Save",
-    addSubject: "Add Subject", subjectName: "Subject Name", add: "Add",
-    addExam: "Add Exam", examName: "Exam Name", score: "Score", total: "Out of",
-    darkMode: "Dark Mode", darkModeDesc: "Calm and eye-friendly appearance",
-    language: "Language", languageDesc: "Change interface language",
-    changeName: "Change Name", dailyGoalSetting: "Daily Sessions Goal",
-    profilePic: "Profile Picture", profilePicDesc: "Click the image to change it", removePic: "Remove Picture",
-    sessionsToday: "Sessions today:", focusMode: "Focus Mode", breakMode: "Break",
-    noSubjects: "No subjects yet", noExams: "No exams yet",
-    fillAll: "Please fill all fields", userExists: "Username already exists",
-    accountCreated: "Account created successfully!", wrongCreds: "Incorrect username or password",
-    gradeSaved: "Grade saved successfully", subjectExists: "Subject already exists",
-    deleteConfirm: "Are you sure you want to delete?", invalidData: "Please enter valid data",
-    gradeNotSet: "Grade not set", nameUpdated: "Name updated successfully",
-    notes: "Notes", chat: "Study Assistant"
-  }
-};
-
-let lang = localStorage.getItem("lang") || "ar";
-let isDark = localStorage.getItem("dark") === "true";
-let currentUser = null;
-let data = { 
-  grade: "", subjects: [], exams: [], avatar: "", 
-  dailyGoal: 4, streak: 0, lastStudyDate: "", 
-  todayPomodoros: 0, todayDate: "" 
-};
-let chartInstance = null;
-let pomoTime = 25 * 60;
-let pomoInterval = null;
-let isFocus = true;
-let isRunning = false;
-
-function t(key) { return i18n[lang][key] || key; }
-
-function getToday() { return new Date().toISOString().split("T")[0]; }
-
-function updateStreak() {
-  const today = getToday();
-  if (data.lastStudyDate === today) return;
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-  if (data.lastStudyDate === yesterday) data.streak = (data.streak || 0) + 1;
-  else if (data.lastStudyDate !== today) data.streak = 1;
-  data.lastStudyDate = today;
-  saveCurrent();
-}
-
-function checkTodayReset() {
-  const today = getToday();
-  if (data.todayDate !== today) {
-    data.todayPomodoros = 0;
-    data.todayDate = today;
-    saveCurrent();
-  }
-}
-
-function populateGrades() {
-  const sel = document.getElementById("grade-select");
-  const current = data.grade;
-  sel.innerHTML = `<option value="">${t("choose")}</option>` +
-    grades[lang].map((g, i) => {
-      const val = grades.ar[i];
-      return `<option value="${val}" ${current === val ? "selected" : ""}>${g}</option>`;
-    }).join("");
-}
-
-function applyLanguage() {
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
-  document.getElementById("app-title").textContent = t("title");
-  document.getElementById("t-title").textContent = t("title");
-  document.getElementById("t-subtitle").textContent = t("subtitle");
-  document.getElementById("lang-select").value = lang;
-  document.getElementById("pomo-mode").textContent = isFocus ? t("focusMode") : t("breakMode");
-  populateGrades();
-  if (currentUser) render();
-}
-
-function changeLanguage(newLang) {
-  lang = newLang;
-  localStorage.setItem("lang", lang);
-  applyLanguage();
-}
-
-function toggleDark() {
-  isDark = !isDark;
-  document.body.classList.toggle("dark", isDark);
-  document.getElementById("dark-toggle").classList.toggle("on", isDark);
-  localStorage.setItem("dark", isDark);
-  if (chartInstance) renderChart();
-}
-
-function showAuth(type) {
-  document.getElementById("btn-login").classList.toggle("active", type === "login");
-  document.getElementById("btn-register").classList.toggle("active", type === "register");
-  document.getElementById("form-login").style.display = type === "login" ? "block" : "none";
-  document.getElementById("form-register").style.display = type === "register" ? "block" : "none";
-  document.getElementById("msg").textContent = "";
-}
-
-function showMessage(text, isError = true) {
-  const el = document.getElementById("msg");
-  el.textContent = text;
-  el.className = "msg " + (isError ? "error" : "success");
-}
-
-function getAllUsers() { return JSON.parse(localStorage.getItem("study_users") || "{}"); }
-function saveAllUsers(u) { localStorage.setItem("study_users", JSON.stringify(u)); }
-function saveCurrent() {
-  const users = getAllUsers();
-  if (currentUser && users[currentUser]) {
-    users[currentUser].data = data;
-    saveAllUsers(users);
-  }
-}
-
-function changeName() {
-  const newName = document.getElementById("new-name").value.trim();
-  if (!newName) return;
-  const users = getAllUsers();
-  users[currentUser].name = newName;
-  saveAllUsers(users);
-  document.getElementById("display-name").textContent = newName;
-  updateAvatarDisplay();
-  document.getElementById("new-name").value = "";
-  alert(t("nameUpdated"));
-}
-
-function saveGoal() {
-  const val = Number(document.getElementById("goal-input").value);
-  if (val >= 1 && val <= 12) {
-    data.dailyGoal = val;
-    saveCurrent();
-    render();
-  }
-}
-
-function register() {
-  const name = document.getElementById("reg-name").value.trim();
-  const username = document.getElementById("reg-username").value.trim();
-  const password = document.getElementById("reg-password").value.trim();
-  if (!name || !username || !password) return showMessage(t("fillAll"));
-  const users = getAllUsers();
-  if (users[username]) return showMessage(t("userExists"));
-  users[username] = { name, password, data: { grade: "", subjects: [], exams: [], avatar: "", dailyGoal: 4, streak: 0, lastStudyDate: "", todayPomodoros: 0, todayDate: "" } };
-  saveAllUsers(users);
-  showMessage(t("accountCreated"), false);
-  setTimeout(() => showAuth("login"), 1000);
-}
-
-function login() {
-  const username = document.getElementById("login-username").value.trim();
-  const password = document.getElementById("login-password").value.trim();
-  const users = getAllUsers();
-  if (!users[username] || users[username].password !== password) return showMessage(t("wrongCreds"));
-  currentUser = username;
-  data = users[username].data || { grade: "", subjects: [], exams: [], avatar: "", dailyGoal: 4, streak: 0, lastStudyDate: "", todayPomodoros: 0, todayDate: "" };
-  localStorage.setItem("current_user", username);
-  enterApp();
-}
-
-function logout() {
-  currentUser = null;
-  localStorage.removeItem("current_user");
-  document.getElementById("app").style.display = "none";
-  document.getElementById("auth").style.display = "flex";
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-  if (pomoInterval) clearInterval(pomoInterval);
-}
-
-function updateAvatarDisplay() {
-  const letter = document.getElementById("display-name").textContent.charAt(0) || "م";
-  document.getElementById("avatar-letter").textContent = letter;
-  document.getElementById("settings-letter").textContent = letter;
-  if (data.avatar) {
-    document.getElementById("avatar-img").src = data.avatar;
-    document.getElementById("avatar-img").style.display = "block";
-    document.getElementById("avatar-letter").style.display = "none";
-    document.getElementById("settings-img").src = data.avatar;
-    document.getElementById("settings-img").style.display = "block";
-    document.getElementById("settings-letter").style.display = "none";
-  } else {
-    document.getElementById("avatar-img").style.display = "none";
-    document.getElementById("avatar-letter").style.display = "block";
-    document.getElementById("settings-img").style.display = "none";
-    document.getElementById("settings-letter").style.display = "block";
-  }
-}
-
-function uploadAvatar(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    data.avatar = e.target.result;
-    saveCurrent();
-    updateAvatarDisplay();
-  };
-  reader.readAsDataURL(file);
-}
-
-function removeAvatar() {
-  data.avatar = "";
-  saveCurrent();
-  updateAvatarDisplay();
-}
-
-function enterApp() {
-  document.getElementById("auth").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  const users = getAllUsers();
-  document.getElementById("display-name").textContent = users[currentUser].name;
-  document.getElementById("goal-input").value = data.dailyGoal || 4;
-  updateAvatarDisplay();
-  updateGradeText();
-  populateGrades();
-  checkTodayReset();
-  render();
-}
-
-function updateGradeText() {
-  const gradeText = data.grade ? (grades[lang][grades.ar.indexOf(data.grade)] || data.grade) : t("gradeNotSet");
-  document.getElementById("display-grade").textContent = gradeText;
-}
-
-function saveGrade() {
-  data.grade = document.getElementById("grade-select").value;
-  saveCurrent();
-  updateGradeText();
-  alert(t("gradeSaved"));
-}
-
-function addSubject() {
-  const name = document.getElementById("new-subject").value.trim();
-  const color = document.getElementById("subject-color").value;
-  if (!name) return;
-  if (data.subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert(t("subjectExists"));
-  data.subjects.push({ id: Date.now(), name, color, notes: "" });
-  document.getElementById("new-subject").value = "";
-  saveCurrent();
-  render();
-}
-
-function changeSubjectColor(id, color) {
-  const sub = data.subjects.find(s => s.id === id);
-  if (sub) {
-    sub.color = color;
-    saveCurrent();
-    render();
-  }
-}
-
-function deleteSubject(id) {
-  if (!confirm(t("deleteConfirm"))) return;
-  data.subjects = data.subjects.filter(s => s.id !== id);
-  data.exams = data.exams.filter(e => e.subjectId !== id);
-  saveCurrent();
-  render();
-}
-
-function saveNote(id) {
-  const note = document.getElementById("note-" + id).value;
-  const sub = data.subjects.find(s => s.id === id);
-  if (sub) {
-    sub.notes = note;
-    saveCurrent();
-  }
-}
-
-function addExam() {
-  const subjectId = Number(document.getElementById("exam-subject").value);
-  const name = document.getElementById("exam-name").value.trim();
-  const score = Number(document.getElementById("exam-score").value);
-  const total = Number(document.getElementById("exam-total").value);
-  if (!subjectId || !name || isNaN(score) || isNaN(total) || score > total || total <= 0) return alert(t("invalidData"));
-  data.exams.push({ id: Date.now(), subjectId, name, score, total, date: new Date().toLocaleDateString() });
-  document.getElementById("exam-name").value = "";
-  document.getElementById("exam-score").value = "";
-  document.getElementById("exam-total").value = "";
-  saveCurrent();
-  render();
-}
-
-function deleteExam(id) {
-  data.exams = data.exams.filter(e => e.id !== id);
-  saveCurrent();
-  render();
-}
-
-function getPercentage(subjectId = null) {
-  let exams = data.exams;
-  if (subjectId) exams = exams.filter(e => e.subjectId === subjectId);
-  if (!exams.length) return 0;
-  const sumScore = exams.reduce((a, e) => a + e.score, 0);
-  const sumTotal = exams.reduce((a, e) => a + e.total, 0);
-  return sumTotal > 0 ? Math.round((sumScore / sumTotal) * 100) : 0;
-}
-
-function getPercClass(p) {
-  if (p >= 70) return "high";
-  if (p >= 50) return "mid";
-  return "low";
-}
-
-function updatePomoDisplay() {
-  const m = Math.floor(pomoTime / 60).toString().padStart(2, "0");
-  const s = (pomoTime % 60).toString().padStart(2, "0");
-  document.getElementById("pomo-time").textContent = m + ":" + s;
-}
-
-function startPomodoro() {
-  if (isRunning) return;
-  isRunning = true;
-  document.getElementById("pomo-start").textContent = lang === "ar" ? "جاري..." : "Running...";
-  pomoInterval = setInterval(() => {
-    pomoTime--;
-    updatePomoDisplay();
-    if (pomoTime <= 0) {
-      clearInterval(pomoInterval);
-      isRunning = false;
-      if (isFocus) {
-        data.todayPomodoros = (data.todayPomodoros || 0) + 1;
-        updateStreak();
-        saveCurrent();
-        alert(lang === "ar" ? "أحسنت! خذ استراحة 5 دقائق" : "Great! Take a 5-minute break");
-        isFocus = false;
-        pomoTime = 5 * 60;
-        document.getElementById("pomo-mode").textContent = t("breakMode");
-      } else {
-        isFocus = true;
-        pomoTime = 25 * 60;
-        document.getElementById("pomo-mode").textContent = t("focusMode");
-      }
-      updatePomoDisplay();
-      document.getElementById("pomo-start").textContent = lang === "ar" ? "ابدأ" : "Start";
-      render();
-    }
-  }, 1000);
-}
-
-function pausePomodoro() {
-  clearInterval(pomoInterval);
-  isRunning = false;
-  document.getElementById("pomo-start").textContent = lang === "ar" ? "ابدأ" : "Start";
-}
-
-function resetPomodoro() {
-  clearInterval(pomoInterval);
-  isRunning = false;
-  isFocus = true;
-  pomoTime = 25 * 60;
-  updatePomoDisplay();
-  document.getElementById("pomo-mode").textContent = t("focusMode");
-  document.getElementById("pomo-start").textContent = lang === "ar" ? "ابدأ" : "Start";
-}
-
-function renderChart() {
-  const ctx = document.getElementById("subjectsChart");
-  if (!ctx) return;
-  if (chartInstance) chartInstance.destroy();
-  const labels = data.subjects.map(s => s.name);
-  const values = data.subjects.map(s => getPercentage(s.id));
-  const colors = data.subjects.map(s => s.color || "#3b82f6");
-  if (labels.length === 0) return;
-  const textColor = getComputedStyle(document.body).getPropertyValue("--text").trim();
-  const gridColor = getComputedStyle(document.body).getPropertyValue("--border").trim();
-  chartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors.map(c => c + "bb"),
-        borderColor: colors,
-        borderWidth: 1,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + "%" } } },
-      scales: {
-        y: { beginAtZero: true, max: 100, ticks: { color: textColor, callback: v => v + "%" }, grid: { color: gridColor } },
-        x: { ticks: { color: textColor }, grid: { display: false } }
-      }
-    }
-  });
-}
-
-function render() {
-  checkTodayReset();
-  const overall = getPercentage();
-  document.getElementById("overall").textContent = overall + "%";
-  document.getElementById("overall-bar").style.width = overall + "%";
-  document.getElementById("streak").textContent = data.streak || 0;
-  document.getElementById("today-pomos").textContent = data.todayPomodoros || 0;
-  document.getElementById("pomo-count").textContent = data.todayPomodoros || 0;
-  const goal = data.dailyGoal || 4;
-  const prog = Math.min(100, Math.round(((data.todayPomodoros || 0) / goal) * 100));
-  document.getElementById("goal-progress").textContent = (data.todayPomodoros || 0) + "/" + goal;
-  document.getElementById("goal-bar").style.width = prog + "%";
-
-  let html = "";
-  data.subjects.forEach(s => {
-    const p = getPercentage(s.id);
-    html += `<div class="item"><div><strong>${s.name}</strong> <input type="color" class="color-dot" value="${s.color||'#3b82f6'}" onchange="changeSubjectColor(${s.id}, this.value)" title="تغيير اللون"><div class="progress" style="width:160px;margin-top:6px;"><div class="progress-bar" style="width:${p}%;background:${s.color||'var(--success)'}"></div></div></div><div class="perc ${getPercClass(p)}">${p}%</div></div>`;
-  });
-  document.getElementById("subjects-progress").innerHTML = html || `<p style="color:var(--muted)">${t("noSubjects")}</p>`;
-
-  html = "";
-  data.subjects.forEach(s => {
-    html += `
-      <div class="item" style="flex-direction:column;align-items:stretch;">
-        <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-          <span>
-            <input type="color" value="${s.color||'#3b82f6'}" onchange="changeSubjectColor(${s.id}, this.value)" style="width:28px;height:28px;border:none;padding:0;cursor:pointer;">
-            ${s.name}
-          </span>
-          <button class="btn btn-sm btn-danger" onclick="deleteSubject(${s.id})">${lang === "ar" ? "حذف" : "Delete"}</button>
-        </div>
-        <textarea id="note-${s.id}" placeholder="${t("notes")}" onblur="saveNote(${s.id})">${s.notes || ""}</textarea>
-      </div>`;
-  });
-  document.getElementById("subjects-list").innerHTML = html || `<p style="color:var(--muted)">${t("noSubjects")}</p>`;
-
-  html = "";
-  [...data.exams].reverse().forEach(e => {
-    const sub = data.subjects.find(s => s.id === e.subjectId);
-    const p = Math.round((e.score / e.total) * 100);
-    html += `<div class="item"><div><strong>${e.name}</strong> — ${sub ? sub.name : "-"}<div style="font-size:13px;color:var(--muted)">${e.score}/${e.total} (${p}%) • ${e.date}</div></div><button class="btn btn-sm btn-gray" onclick="deleteExam(${e.id})">${lang === "ar" ? "حذف" : "Delete"}</button></div>`;
-  });
-  document.getElementById("exams-list").innerHTML = html || `<p style="color:var(--muted)">${t("noExams")}</p>`;
-
-  const sel = document.getElementById("exam-subject");
-  sel.innerHTML = `<option value="">${t("choose")}</option>` + data.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
-  renderChart();
-}
-
-function toggleChat() {
-  document.getElementById("chat-panel").classList.toggle("open");
-}
-
-const chatHistory = [];
-let chatBusy = false;
-
-function addChatBubble(role, text, extraClass = "") {
-  const messages = document.getElementById("chat-messages");
-  const bubble = document.createElement("div");
-  bubble.className = "chat-bubble " + role + (extraClass ? " " + extraClass : "");
-  const label = document.createElement("strong");
-  label.textContent = role === "user"
-    ? (lang === "ar" ? "أنت: " : "You: ")
-    : (lang === "ar" ? "المساعد: " : "Assistant: ");
-  bubble.appendChild(label);
-  bubble.appendChild(document.createTextNode(text));
-  messages.appendChild(bubble);
-  messages.scrollTop = messages.scrollHeight;
-  return bubble;
-}
-
-async function sendChat() {
-  const input = document.getElementById("chat-input");
-  const sendButton = document.querySelector(".chat-input button");
-  const msg = input.value.trim();
-  if (!msg || chatBusy) return;
-
-  // Add the user's message as text, not HTML, to prevent injected markup.
-  addChatBubble("user", msg);
-  input.value = "";
-  chatHistory.push({ role: "user", content: msg });
-
-  chatBusy = true;
-  sendButton.disabled = true;
-  sendButton.textContent = lang === "ar" ? "جاري التفكير..." : "Thinking...";
-  const status = document.createElement("div");
-  status.className = "chat-status";
-  status.textContent = lang === "ar" ? "المساعد يكتب الآن..." : "Assistant is typing...";
-  document.getElementById("chat-messages").appendChild(status);
-  status.scrollIntoView({ block: "end" });
-
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: msg,
-        history: chatHistory.slice(-12),
-        language: lang
-      })
-    });
-
-    const result = await response.json().catch(() => ({}));
-    status.remove();
-
-    if (!response.ok) {
-      throw new Error(result.error || (lang === "ar"
-        ? "تعذّر الاتصال بالذكاء الاصطناعي."
-        : "Could not connect to the AI."));
-    }
-
-    const answer = (result.reply || "").trim();
-    if (!answer) throw new Error(lang === "ar" ? "وصل رد فارغ. حاول مرة أخرى." : "The AI returned an empty answer.");
-    chatHistory.push({ role: "assistant", content: answer });
-    addChatBubble("assistant", answer);
-  } catch (error) {
-    status.remove();
-    const friendly = error.message === "Failed to fetch"
-      ? (lang === "ar"
-        ? "لم أستطع الاتصال بالخادم. شغّل الموقع من خلال server.js، وليس بفتح ملف HTML مباشرة."
-        : "Could not reach the server. Run server.js instead of opening the HTML file directly.")
-      : error.message;
-    addChatBubble("assistant", friendly, "error");
-    // Remove the unanswered user message from context so retrying is clean.
-    chatHistory.pop();
-  } finally {
-    chatBusy = false;
-    sendButton.disabled = false;
-    sendButton.textContent = lang === "ar" ? "إرسال" : "Send";
-    input.focus();
-  }
-}
-
-function showSection(id, btn) {
-  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  if (btn) btn.classList.add("active");
-  if (id === "dashboard") setTimeout(renderChart, 50);
-}
-
-window.onload = () => {
-  if (isDark) {
-    document.body.classList.add("dark");
-    document.getElementById("dark-toggle").classList.add("on");
-  }
-  applyLanguage();
-  updatePomoDisplay();
-  const saved = localStorage.getItem("current_user");
-  if (saved) {
-    const users = getAllUsers();
-    if (users[saved]) {
-      currentUser = saved;
-      data = users[saved].data || { grade: "", subjects: [], exams: [], avatar: "", dailyGoal: 4, streak: 0, lastStudyDate: "", todayPomodoros: 0, todayDate: "" };
-      enterApp();
-    }
-  }
-};
-</script>
 </body>
 </html>
